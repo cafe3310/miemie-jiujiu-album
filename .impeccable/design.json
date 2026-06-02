@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-02T18:20:00Z",
+  "title": "Design System: jiujiu-miemie-gallery",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Stark Charcoal",
+        "canonical": "#1a1a1a",
+        "tonalRamp": ["#0d0d0d", "#1a1a1a", "#333333", "#4d4d4d", "#666666", "#808080", "#999999", "#b3b3b3"]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Bright White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#8c8c8c", "#a6a6a6", "#bfbfbf", "#d9d9d9", "#f2f2f2", "#f5f5f5", "#fafafa", "#ffffff"]
+      },
+      "neutral-border": {
+        "role": "neutral",
+        "displayName": "Soft Ash",
+        "canonical": "#eaeaea",
+        "tonalRamp": ["#666666", "#7f7f7f", "#999999", "#b3b3b3", "#cccccc", "#e5e5e5", "#eaeaea", "#f5f5f5"]
+      },
+      "neutral-text-muted": {
+        "role": "neutral",
+        "displayName": "Muted Grey",
+        "canonical": "#888888",
+        "tonalRamp": ["#333333", "#4d4d4d", "#666666", "#808080", "#888888", "#999999", "#b3b3b3", "#cccccc"]
+      },
+      "neutral-surface": {
+        "role": "neutral",
+        "displayName": "Off-White Surface",
+        "canonical": "#fafafa",
+        "tonalRamp": ["#808080", "#999999", "#b3b3b3", "#cccccc", "#e6e6e6", "#f0f0f0", "#fafafa", "#ffffff"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Title",
+        "purpose": "Main site title in the header."
+      },
+      "headline": {
+        "displayName": "Headline Title",
+        "purpose": "Post titles and section titles."
+      },
+      "body": {
+        "displayName": "Body Content",
+        "purpose": "Primary readable prose, summary text, and description details."
+      },
+      "label": {
+        "displayName": "Monospace / Metadata",
+        "purpose": "Metadata metrics, tag categories, asset captions, and technical configurations."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Navigation Link",
+      "kind": "nav",
+      "refersTo": "button-primary",
+      "description": "Top header navigational links for NOTES and LINKS channels.",
+      "html": "<nav class=\"ds-site-nav\">\n  <a href=\"#\" class=\"ds-nav-link ds-active\">NOTES</a>\n  <a href=\"#\" class=\"ds-nav-link\">LINKS</a>\n</nav>",
+      "css": ".ds-site-nav { display: flex; gap: 24px; } .ds-nav-link { background: none; border: none; padding: 0; color: #888888; font-family: Inter, sans-serif; font-size: 14.4px; text-decoration: none; cursor: pointer; } .ds-nav-link:hover, .ds-nav-link.ds-active { color: #1a1a1a; text-decoration: underline; text-underline-offset: 4px; }"
+    },
+    {
+      "name": "Link Card",
+      "kind": "card",
+      "refersTo": "link-card",
+      "description": "Flat card for external portfolio and profile references.",
+      "html": "<a href=\"#\" class=\"ds-link-card\">\n  <span class=\"ds-link-card-title\">My Personal Portfolio</span>\n  <span class=\"ds-link-card-url\">cafe3310.github.io &rarr;</span>\n</a>",
+      "css": ".ds-link-card { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border: 1px solid #eeeeee; border-radius: 0px; text-decoration: none; color: #1a1a1a; font-family: Inter, sans-serif; background-color: #ffffff; } .ds-link-card:hover { border-color: #1a1a1a; } .ds-link-card-title { font-size: 16.8px; font-weight: 400; } .ds-link-card-url { font-size: 13.6px; color: #888888; }"
+    },
+    {
+      "name": "Gallery Item Container",
+      "kind": "custom",
+      "refersTo": "gallery-item",
+      "description": "Stark flat thumbnail frame for cat photos and original character art.",
+      "html": "<div class=\"ds-gallery-container\">\n  <div class=\"ds-gallery-item\">\n    <img src=\"../gallery/cat_1.jpg\" alt=\"Real Cat Photo\">\n  </div>\n  <div class=\"ds-asset-caption\">Real Cat Photo</div>\n</div>",
+      "css": ".ds-gallery-container { display: flex; flex-direction: column; gap: 8px; font-family: Inter, sans-serif; } .ds-gallery-item { background-color: #fafafa; border: 1px solid #eeeeee; border-radius: 0px; aspect-ratio: 1 / 1; overflow: hidden; cursor: pointer; width: 160px; height: 160px; } .ds-gallery-item:hover { border-color: #666666; } .ds-gallery-item img { width: 100%; height: 100%; object-fit: cover; } .ds-asset-caption { font-size: 12.8px; color: #888888; text-align: center; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Monochromatic Gallery: A stark, high-contrast canvas where content acts as the sole color, and space provides the rhythm.",
+    "overview": "This design system is crafted to project a quiet, minimalist editorial environment. By removing decorative accents, shadows, and motion, the layout operates as a clean paper gallery where the cat photos and generated illustrations serve as the exclusive focus of color and expression.\n\nVisual structure is established through scale hierarchy, generous whitespace, and sharp edges. It explicitly rejects conventional SaaS styling elements, opting instead for structural quietness.",
+    "keyCharacteristics": [
+      "Content-first hierarchy: Layout elements are silent, framing rather than distracting from the media.",
+      "Purely static interaction: Total elimination of transitions and animations to ensure low friction and instant feedback.",
+      "Stark geometry: Hard sharp corners (0px) and clean grid dividers."
+    ],
+    "rules": [
+      {
+        "name": "The Colorless Canvas Rule",
+        "body": "No background color or text highlight color other than neutrals (#ffffff, #fafafa, #1a1a1a) is permitted. Chroma is reserved strictly for images and video assets.",
+        "section": "colors"
+      },
+      {
+        "name": "The Hard Edge Rule",
+        "body": "All borders, boxes, and interactive cards must use a border-radius of 0px. Sharp geometric boundaries define the editorial structure.",
+        "section": "elevation"
+      },
+      {
+        "name": "The No-Shadow Rule",
+        "body": "Depth shadows (box-shadow or text-shadow) are strictly prohibited, keeping all elements flat at rest.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do align structural divisions to a clean, grid-based grid with 1px border lines.",
+      "Do wrap code elements in sharp-cornered light grey blocks.",
+      "Do use large whitespace margins (such as 4rem to 5rem) to separate site branding from list cards."
+    ],
+    "donts": [
+      "Don't use side-stripe borders greater than 1px as an accent highlight.",
+      "Don't apply any CSS transitions (transition property) or animation keyframes.",
+      "Don't use rounded corners (border-radius) except for external/default code highlights.",
+      "Don't use SaaS template layouts featuring multi-column dashboards or icon grids."
+    ]
+  }
+}
