@@ -29,7 +29,7 @@ header {
 
 header h1 {
   font-size: 2.2rem;
-  font-weight: 300;
+  font-weight: 400;
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.03em;
 }
@@ -38,7 +38,7 @@ header p {
   color: #888888;
   margin: 0;
   font-size: 0.95rem;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 .site-nav {
@@ -304,3 +304,5 @@ pre {
   height: 100%;
   object-fit: contain;
 }
+
+
