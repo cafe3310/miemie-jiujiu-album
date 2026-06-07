@@ -12,52 +12,61 @@ templates_dir = os.path.join(repo_root, "templates")
 
 
 # 一个简易的 YAML 解析器
+# 一个支持多级嵌套的极简 YAML 解析器
 def parse_yaml(yaml_text):
     data = {}
-    current_key = None
-    current_list = None
-    current_item = None
+    # stack 元素为 [indent, key, container, type]
+    stack = [(0, None, data, 'dict')]
     
     for line in yaml_text.split("\n"):
-        if not line.strip():
+        if not line.strip() or line.strip().startswith("#"):
             continue
-        # 列表的元素，例如 "- url: ..."
-        if line.strip().startswith("-"):
-            if current_key and isinstance(data.get(current_key), list):
-                item_content = line.strip().lstrip("-").strip()
-                # 键值对解析
-                sub_m = re.match(r'^([^:]+):(.*)$', item_content)
-                if sub_m:
-                    k = sub_m.group(1).strip()
-                    v = sub_m.group(2).strip().strip('"').strip("'")
-                    current_item = {k: v}
-                    data[current_key].append(current_item)
-            continue
-        # 列表的属性，例如 "  title: ..." 在列表元素开始之后
-        elif line.startswith(" ") and current_item is not None:
-            sub_m = re.match(r'^\s+([^:]+):(.*)$', line)
-            if sub_m:
-                k = sub_m.group(1).strip()
-                v = sub_m.group(2).strip().strip('"').strip("'")
-                current_item[k] = v
-            continue
+            
+        indent = len(line) - len(line.lstrip(' '))
+        stripped = line.strip()
         
-        # 普通键值
-        m = re.match(r'^([^:]+):(.*)$', line)
+        # 弹栈到合适的缩进父级
+        while len(stack) > 1 and stack[-1][0] > indent:
+            stack.pop()
+            
+        parent_indent, parent_key, parent_container, parent_type = stack[-1]
+        
+        if stripped.startswith("-"):
+            # 如果父容器是 dict 且为空，纠正为 list
+            if parent_type == 'dict':
+                grand_indent, grand_key, grand_container, grand_type = stack[-2]
+                grand_container[parent_key] = []
+                stack[-1] = (parent_indent, parent_key, grand_container[parent_key], 'list')
+                parent_container = grand_container[parent_key]
+                parent_type = 'list'
+                
+            val_part = stripped[1:].strip()
+            # 键值对列表项，如 - url: ...
+            m = re.match(r'^([^:]+):\s+(.*)$', val_part)
+            if m:
+                k = m.group(1).strip()
+                v = m.group(2).strip().strip('"').strip("'")
+                item = {k: v}
+                parent_container.append(item)
+                stack.append((indent + 2, len(parent_container) - 1, item, 'dict'))
+            else:
+                # 纯字符串列表元素，如 - "https://..."
+                v = val_part.strip('"').strip("'")
+                parent_container.append(v)
+            continue
+            
+        # 普通键值对，如 key: val
+        m = re.match(r'^([^:]+):(.*)$', stripped)
         if m:
             key = m.group(1).strip()
             val = m.group(2).strip()
             
-            # 判断是否为列表的声明，如 "assets:"
             if val == "":
-                data[key] = []
-                current_key = key
-                current_item = None
+                parent_container[key] = {}
+                stack.append((indent + 2, key, parent_container[key], 'dict'))
             else:
-                val = val.strip('"').strip("'")
-                data[key] = val
-                current_key = None
-                current_item = None
+                v = val.strip('"').strip("'")
+                parent_container[key] = v
                 
     return data
 
@@ -213,8 +222,11 @@ def build_site():
     # 对 posts 按日期降序排列
     posts.sort(key=lambda x: x.get("date", ""), reverse=True)
 
-    # 确保 docs/ 和 docs/posts/ 文件夹存在
+    # 确保 docs/ 文件夹存在（在编译前先清空 docs 目录以清除历史残留文件）
     docs_dir = os.path.join(repo_root, "docs")
+    if os.path.exists(docs_dir):
+        shutil.rmtree(docs_dir, ignore_errors=True)
+        
     posts_output_dir = os.path.join(docs_dir, "posts")
     os.makedirs(posts_output_dir, exist_ok=True)
 
@@ -264,7 +276,7 @@ def build_site():
             "url": f"https://cafe3310.github.io/jiujiu-miemie-gallery/posts/{post.get('id')}.html",
             "author": {
                 "@type": "Person",
-                "name": "cafe3310"
+                "name": post.get("author") or "cafe3310"
             }
         })
 
@@ -325,19 +337,24 @@ def build_site():
             if url.startswith("./"):
                 url = "../" + url[2:]
             
+            alt_text = asset.get("alt") or asset.get("title") or ""
             if post.get("assetsType") == "video":
                 media_html = f'<video src="{url}" autoplay loop muted playsinline></video>'
                 item_class = "gallery-item video-item"
             else:
-                media_html = f'<img src="{url}" alt="{html.escape(asset.get("title", ""))}" loading="lazy">'
+                media_html = f'<img src="{url}" alt="{html.escape(alt_text)}" loading="lazy">'
                 item_class = "gallery-item"
+                
+            caption_html = ""
+            if asset.get("title"):
+                caption_html = f'<div class="asset-caption">{html.escape(asset.get("title"))}</div>'
                 
             gallery_items.append(f"""
             <div class="gallery-container">
               <div class="{item_class}" data-idx="{idx}">
                 {media_html}
               </div>
-              <div class="asset-caption">{html.escape(asset.get("title", ""))}</div>
+              {caption_html}
             </div>
             """)
         post_gallery_str = "\n".join(gallery_items)
@@ -357,6 +374,34 @@ def build_site():
         post_content = post_content.replace("<!-- {{POST_GALLERY}} -->", post_gallery_str)
         post_content = post_content.replace("<!-- {{POST_DATA_JSON}} -->", json.dumps(post_data_copy, ensure_ascii=False))
 
+        # 动态从 pageMeta 中提取并组装作者及关联数据 (sameAs, owns 等)
+        page_meta = post.get("pageMeta")
+        if not isinstance(page_meta, dict):
+            page_meta = {}
+            
+        author_data = {
+            "@type": "Person",
+            "name": page_meta.get("author") or post.get("author") or "cafe3310"
+        }
+        
+        same_as = page_meta.get("authorSameAs") or page_meta.get("sameAs")
+        if same_as:
+            if isinstance(same_as, str):
+                same_as = [s.strip() for s in same_as.split(",") if s.strip()]
+            author_data["sameAs"] = same_as
+            
+        owns = page_meta.get("owns")
+        if owns:
+            owns_list = []
+            for item in owns:
+                if isinstance(item, dict):
+                    owns_list.append({
+                        "@type": "Thing",
+                        "name": item.get("name", ""),
+                        "description": item.get("description", "")
+                    })
+            author_data["owns"] = owns_list
+
         # 为该篇文章配置极度具体的 TechArticle / BlogPosting JSON-LD 描述，以包含它独特的媒体资产
         post_json_ld = {
             "@context": "https://schema.org",
@@ -365,15 +410,12 @@ def build_site():
             "description": post.get("description"),
             "datePublished": post.get("date"),
             "url": f"https://cafe3310.github.io/jiujiu-miemie-gallery/posts/{post.get('id')}.html",
-            "author": {
-                "@type": "Person",
-                "name": "cafe3310"
-            },
+            "author": author_data,
             "about": [
                 {
                     "@type": "ImageObject" if post.get("assetsType") == "image" else "VideoObject",
-                    "name": asset.get("title"),
-                    "caption": asset.get("title"),
+                    "name": asset.get("title") or asset.get("alt") or "",
+                    "caption": asset.get("title") or asset.get("alt") or "",
                     "contentUrl": f"https://cafe3310.github.io/jiujiu-miemie-gallery{asset.get('url')[1:]}"
                 } for asset in post.get("assets", [])
             ]

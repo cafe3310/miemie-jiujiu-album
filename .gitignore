@@ -21,3 +21,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Inbox temporary assets
+inbox/*
+!inbox/.gitkeep

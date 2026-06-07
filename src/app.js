@@ -21,15 +21,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Modal Details
   function openModal(asset, type) {
-    modalTitle.textContent = asset.title;
+    modalTitle.textContent = asset.title || "";
 
     // The asset.url has already been adjusted by build.py (e.g. '../gallery/sticker_1.png')
     const assetUrl = asset.url;
+    const altText = asset.alt || asset.title || "";
 
     if (type === "video") {
       modalMediaContainer.innerHTML = `<video src="${assetUrl}" autoplay loop muted playsinline controls style="max-height:320px; width:100%; object-fit:contain;"></video>`;
     } else {
-      modalMediaContainer.innerHTML = `<img src="${assetUrl}" alt="${asset.title}" style="max-height:320px; width:100%; object-fit:contain;">`;
+      modalMediaContainer.innerHTML = `<img src="${assetUrl}" alt="${altText}" style="max-height:320px; width:100%; object-fit:contain;">`;
     }
 
     modalContainer.style.display = "flex";
