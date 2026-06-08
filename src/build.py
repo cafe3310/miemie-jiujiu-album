@@ -457,6 +457,14 @@ def build_site():
         shutil.copytree(src_gallery, dest_gallery)
         print("  Copied gallery/ to docs/gallery/")
 
+    # 5. 拷贝根目录下的 Google 验证文件（如 google*.html）
+    for file_name in os.listdir(repo_root):
+        if file_name.startswith("google") and file_name.endswith(".html"):
+            src_file = os.path.join(repo_root, file_name)
+            dest_file = os.path.join(docs_dir, file_name)
+            shutil.copy(src_file, dest_file)
+            print(f"  Copied verification file: {file_name} to docs/")
+
     print(f"Site built successfully! Output root: {docs_dir}")
 
 if __name__ == "__main__":
