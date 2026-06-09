@@ -1,0 +1,3 @@
+- **决策**：修复 Google Rich Results 校验中 TechArticle 结构化数据缺失 `image` 字段的错误，并为 `author` 补齐 GitHub 个人主页链接。
+- **修改**：
+  - 修改：[src/build.py](file:///Users/sipan/workspace/_working/jiujiu-miemie-gallery/src/build.py) 增加 `get_post_images` 提取图片；在首页和详情页的 `TechArticle` 中注入 `image` 字段；将 `author` 的 `url` 属性设置为 `https://github.com/cafe3310`。

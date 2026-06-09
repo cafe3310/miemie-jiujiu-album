@@ -195,6 +195,21 @@ def generate_og_meta(title, description, url, image_url, page_type="website", ar
     return "\n  ".join(lines)
 
 
+def get_post_images(post):
+    post_images = []
+    assets = post.get("assets", [])
+    if assets and post.get("assetsType") == "image":
+        for asset in assets:
+            url = asset.get("url", "")
+            if url.startswith("./"):
+                post_images.append("https://cafe3310.github.io/chocho-miemie-gallery/" + url[2:])
+            elif url.startswith("gallery/"):
+                post_images.append(f"https://cafe3310.github.io/chocho-miemie-gallery/{url}")
+    if not post_images:
+        post_images.append("https://cafe3310.github.io/chocho-miemie-gallery/gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg")
+    return post_images
+
+
 def render_page(content, title, description, path_prefix, nav_notes_active, nav_links_active, json_ld, base_template, meta_og=""):
     page = base_template
     page = page.replace("<!-- {{TITLE}} -->", title)
@@ -311,15 +326,18 @@ def build_site():
         ]
     }
     for post in posts:
+        post_imgs = get_post_images(post)
         index_json_ld["@graph"].append({
             "@type": "TechArticle",
             "headline": post.get("title"),
             "description": post.get("description"),
+            "image": post_imgs,
             "datePublished": post.get("date"),
             "url": f"https://cafe3310.github.io/chocho-miemie-gallery/posts/{post.get('id')}.html",
             "author": {
                 "@type": "Person",
-                "name": post.get("author") or "cafe3310"
+                "name": post.get("author") or "cafe3310",
+                "url": "https://github.com/cafe3310"
             }
         })
 
@@ -442,7 +460,8 @@ def build_site():
             
         author_data = {
             "@type": "Person",
-            "name": page_meta.get("author") or post.get("author") or "cafe3310"
+            "name": page_meta.get("author") or post.get("author") or "cafe3310",
+            "url": page_meta.get("authorUrl") or "https://github.com/cafe3310"
         }
         
         same_as = page_meta.get("authorSameAs") or page_meta.get("sameAs")
@@ -463,12 +482,16 @@ def build_site():
                     })
             author_data["owns"] = owns_list
 
+        # 寻找所有资产作为 og:image
+        post_images = get_post_images(post)
+
         # 为该篇文章配置极度具体的 TechArticle / BlogPosting JSON-LD 描述，以包含它独特的媒体资产
         post_json_ld = {
             "@context": "https://schema.org",
             "@type": "TechArticle",
             "headline": post.get("title"),
             "description": post.get("description"),
+            "image": post_images,
             "datePublished": post.get("date"),
             "url": f"https://cafe3310.github.io/chocho-miemie-gallery/posts/{post.get('id')}.html",
             "author": author_data,
@@ -481,20 +504,6 @@ def build_site():
                 } for asset in post.get("assets", [])
             ]
         }
-
-        # 寻找所有资产作为 og:image
-        post_images = []
-        assets = post.get("assets", [])
-        if assets and post.get("assetsType") == "image":
-            for asset in assets:
-                first_asset_url = asset.get("url", "")
-                if first_asset_url.startswith("./"):
-                    post_images.append("https://cafe3310.github.io/chocho-miemie-gallery/" + first_asset_url[2:])
-                elif first_asset_url.startswith("gallery/"):
-                    post_images.append(f"https://cafe3310.github.io/chocho-miemie-gallery/{first_asset_url}")
-
-        if not post_images:
-            post_images.append("https://cafe3310.github.io/chocho-miemie-gallery/gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg")
 
         article_meta = {
             "published_time": post.get("date"),
