@@ -1,5 +1,5 @@
 ---
-name: jiujiu-miemie-gallery
+name: chocho-miemie-gallery
 description: A stark visual gallery showcasing cat-themed art and diaries.
 colors:
   primary: "#1a1a1a"
@@ -50,7 +50,7 @@ components:
     backgroundColor: "{colors.neutral-surface}"
 ---
 
-# Design System: jiujiu-miemie-gallery
+# Design System: chocho-miemie-gallery
 
 ## 1. Overview
 
