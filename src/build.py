@@ -159,7 +159,7 @@ def markdown_to_html(md_text):
     return "\n".join(html_lines)
 
 # 统一渲染模板渲染器
-def generate_og_meta(title, description, url, image_url, page_type="website", article_meta=None):
+def generate_og_meta(title, description, url, image_url, page_type="website", article_meta=None, site_name="chocho-miemie gallery, cats of cafe3310"):
     if isinstance(image_url, list):
         images = image_url
     else:
@@ -175,7 +175,7 @@ def generate_og_meta(title, description, url, image_url, page_type="website", ar
 
     lines.extend([
         f'<meta property="og:description" content="{html.escape(description)}">',
-        '<meta property="og:site_name" content="chocho-miemie gallery, cats of cafe3310">',
+        f'<meta property="og:site_name" content="{html.escape(site_name)}">',
         '<meta name="twitter:card" content="summary_large_image">',
         f'<meta name="twitter:title" content="{html.escape(title)}">',
         f'<meta name="twitter:description" content="{html.escape(description)}">'
@@ -195,18 +195,18 @@ def generate_og_meta(title, description, url, image_url, page_type="website", ar
     return "\n  ".join(lines)
 
 
-def get_post_images(post):
+def get_post_images(post, site_url):
     post_images = []
     assets = post.get("assets", [])
     if assets and post.get("assetsType") == "image":
         for asset in assets:
             url = asset.get("url", "")
             if url.startswith("./"):
-                post_images.append("https://cafe3310.github.io/chocho-miemie-gallery/" + url[2:])
+                post_images.append(site_url + url[2:])
             elif url.startswith("gallery/"):
-                post_images.append(f"https://cafe3310.github.io/chocho-miemie-gallery/{url}")
+                post_images.append(f"{site_url}{url}")
     if not post_images:
-        post_images.append("https://cafe3310.github.io/chocho-miemie-gallery/gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg")
+        post_images.append(f"{site_url}gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg")
     return post_images
 
 
@@ -228,6 +228,25 @@ def render_page(content, title, description, path_prefix, nav_notes_active, nav_
 def build_site():
     print("Building static site...")
     posts = []
+    
+    # 动态加载站点 Meta 配置
+    site_meta = {}
+    meta_path = os.path.join(source_dir, "_meta.md")
+    if os.path.exists(meta_path):
+        try:
+            with open(meta_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            parts = content.split("---")
+            if len(parts) >= 3:
+                site_meta = parse_yaml(parts[1])
+        except Exception as e:
+            print(f"Error parsing _meta.md: {e}")
+            
+    site_url = site_meta.get("site_url", "https://cafe3310.github.io/chocho-miemie-gallery/")
+    if not site_url.endswith("/"):
+        site_url += "/"
+    site_name = site_meta.get("site_name", "chocho-miemie gallery, cats of cafe3310")
+    site_description = site_meta.get("site_description", "just cats")
     
     # 动态加载外部链接
     external_links = []
@@ -318,22 +337,22 @@ def build_site():
         "@graph": [
             {
                 "@type": "WebSite",
-                "@id": "https://cafe3310.github.io/chocho-miemie-gallery/#website",
-                "name": "chocho-miemie gallery, cats of cafe3310",
-                "url": "https://cafe3310.github.io/chocho-miemie-gallery/",
-                "description": "原创角色 chocho & miemie 的画廊、LoRA 经验与微调经验分享 Playground。"
+                "@id": f"{site_url}#website",
+                "name": site_name,
+                "url": site_url,
+                "description": site_description
             }
         ]
     }
     for post in posts:
-        post_imgs = get_post_images(post)
+        post_imgs = get_post_images(post, site_url)
         index_json_ld["@graph"].append({
             "@type": "TechArticle",
             "headline": post.get("title"),
             "description": post.get("description"),
             "image": post_imgs,
             "datePublished": post.get("date"),
-            "url": f"https://cafe3310.github.io/chocho-miemie-gallery/posts/{post.get('id')}.html",
+            "url": f"{site_url}posts/{post.get('id')}.html",
             "author": {
                 "@type": "Person",
                 "name": post.get("author") or "cafe3310",
@@ -342,17 +361,18 @@ def build_site():
         })
 
     index_meta_og = generate_og_meta(
-        title="chocho-miemie gallery, cats of cafe3310",
-        description="just cats",
-        url="https://cafe3310.github.io/chocho-miemie-gallery/index.html",
-        image_url="https://cafe3310.github.io/chocho-miemie-gallery/gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg",
-        page_type="website"
+        title=site_name,
+        description=site_description,
+        url=f"{site_url}index.html",
+        image_url=f"{site_url}gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg",
+        page_type="website",
+        site_name=site_name
     )
 
     index_html_output = render_page(
         content=index_content,
         title="Notes",
-        description="just cats",
+        description=site_description,
         path_prefix=".",
         nav_notes_active=True,
         nav_links_active=False,
@@ -360,6 +380,7 @@ def build_site():
         base_template=base_template,
         meta_og=index_meta_og
     )
+
     with open(os.path.join(docs_dir, "index.html"), 'w', encoding='utf-8') as f:
         f.write(index_html_output)
     print("  Generated index.html")
@@ -375,27 +396,27 @@ def build_site():
         """)
     links_str = "\n".join(links_html)
     links_content = links_content_template.replace("<!-- {{LINKS_LIST}} -->", links_str)
-
     links_json_ld = {
         "@context": "https://schema.org",
         "@type": "WebPage",
-        "name": "Links - chocho-miemie gallery",
-        "description": "Other channels and resources for chocho-miemie gallery, cats of cafe3310",
-        "url": "https://cafe3310.github.io/chocho-miemie-gallery/links.html"
+        "name": f"Links - {site_name}",
+        "description": f"Other channels and resources for {site_name}",
+        "url": f"{site_url}links.html"
     }
 
     links_meta_og = generate_og_meta(
         title="Links",
-        description="Other channels and resources for chocho-miemie gallery, cats of cafe3310",
-        url="https://cafe3310.github.io/chocho-miemie-gallery/links.html",
-        image_url="https://cafe3310.github.io/chocho-miemie-gallery/gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg",
-        page_type="website"
+        description=f"Other channels and resources for {site_name}",
+        url=f"{site_url}links.html",
+        image_url=f"{site_url}gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg",
+        page_type="website",
+        site_name=site_name
     )
 
     links_html_output = render_page(
         content=links_content,
         title="Links",
-        description="Other channels and resources for chocho-miemie gallery, cats of cafe3310",
+        description=f"Other channels and resources for {site_name}",
         path_prefix=".",
         nav_notes_active=False,
         nav_links_active=True,
@@ -403,6 +424,7 @@ def build_site():
         base_template=base_template,
         meta_og=links_meta_og
     )
+
     with open(os.path.join(docs_dir, "links.html"), 'w', encoding='utf-8') as f:
         f.write(links_html_output)
     print("  Generated links.html")
@@ -483,7 +505,7 @@ def build_site():
             author_data["owns"] = owns_list
 
         # 寻找所有资产作为 og:image
-        post_images = get_post_images(post)
+        post_images = get_post_images(post, site_url)
 
         # 为该篇文章配置极度具体的 TechArticle / BlogPosting JSON-LD 描述，以包含它独特的媒体资产
         post_json_ld = {
@@ -493,14 +515,14 @@ def build_site():
             "description": post.get("description"),
             "image": post_images,
             "datePublished": post.get("date"),
-            "url": f"https://cafe3310.github.io/chocho-miemie-gallery/posts/{post.get('id')}.html",
+            "url": f"{site_url}posts/{post.get('id')}.html",
             "author": author_data,
             "about": [
                 {
                     "@type": "ImageObject" if post.get("assetsType") == "image" else "VideoObject",
                     "name": asset.get("title") or asset.get("alt") or "",
                     "caption": asset.get("title") or asset.get("alt") or "",
-                    "contentUrl": f"https://cafe3310.github.io/chocho-miemie-gallery{asset.get('url')[1:]}"
+                    "contentUrl": f"{site_url}{asset.get('url')[3:]}" if asset.get('url', '').startswith("../") else (f"{site_url}{asset.get('url')[2:]}" if asset.get('url', '').startswith("./") else f"{site_url}{asset.get('url')}")
                 } for asset in post.get("assets", [])
             ]
         }
@@ -514,10 +536,11 @@ def build_site():
         post_meta_og = generate_og_meta(
             title=post.get("title", ""),
             description=post.get("description", ""),
-            url=f"https://cafe3310.github.io/chocho-miemie-gallery/posts/{post.get('id')}.html",
+            url=f"{site_url}posts/{post.get('id')}.html",
             image_url=post_images,
             page_type="article",
-            article_meta=article_meta
+            article_meta=article_meta,
+            site_name=site_name
         )
 
         # 调用 render_page 生成最终 the HTML 文件内容
