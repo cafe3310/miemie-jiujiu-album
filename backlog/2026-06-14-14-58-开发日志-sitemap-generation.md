@@ -1,0 +1,10 @@
+- **实现功能**：为站点添加了符合 Google 要求的 Sitemap（`sitemap.xml`）以及引导蜘蛛抓取的 `robots.txt`。
+- **主要修改**：
+  - 修改了 [src/build.py](file:///Users/sipan/workspace/_working/jiujiu-miemie-gallery/src/build.py#L590-L652)，在构建流程的最后（Step 6）加入自动生成 `sitemap.xml` 和 `robots.txt` 的逻辑。
+  - `sitemap.xml` 包含首页（`/`）、链接页（`/links.html`）和所有已解析生成的文章页面（`/posts/*.html`），并为不同页面分配合理的优先级与更新频率，同时将文章的发布日期 `date` 作为 `lastmod` 写入对应 URL 节点。
+- **验证结果**：
+  - 成功运行 `python3 src/build.py`。
+  - 经检查，输出目录中的 [docs/sitemap.xml](file:///Users/sipan/workspace/_working/jiujiu-miemie-gallery/docs/sitemap.xml) 和 [docs/robots.txt](file:///Users/sipan/workspace/_working/jiujiu-miemie-gallery/docs/robots.txt) 均已按照 `source/_meta.md` 中的 `site_url`（`https://cafe3310.github.io/chocho-miemie-album/`）正确渲染，XML 节点结构和属性均无误。
+- **后续建议**：
+  - 由用户进行代码审查并执行 Git 提交。
+  - 项目部署到线上后，在 Google Search Console 中提交对应的 sitemap 地址。

@@ -588,6 +588,70 @@ def build_site():
             shutil.copy(src_file, dest_file)
             print(f"  Copied verification file: {file_name} to docs/")
 
+    # 6. 生成 sitemap.xml 和 robots.txt
+    sitemap_path = os.path.join(docs_dir, "sitemap.xml")
+    robots_path = os.path.join(docs_dir, "robots.txt")
+    
+    sitemap_urls = []
+    latest_date = None
+    if posts:
+        latest_date = posts[0].get("date")
+    
+    if not latest_date:
+        import datetime
+        latest_date = datetime.date.today().isoformat()
+    
+    sitemap_urls.append({
+        "loc": site_url,
+        "lastmod": latest_date,
+        "changefreq": "daily",
+        "priority": "1.0"
+    })
+    
+    sitemap_urls.append({
+        "loc": f"{site_url}links.html",
+        "lastmod": latest_date,
+        "changefreq": "weekly",
+        "priority": "0.5"
+    })
+    
+    for post in posts:
+        post_date = post.get("date")
+        if not post_date:
+            post_date = latest_date
+        sitemap_urls.append({
+            "loc": f"{site_url}posts/{post.get('id')}.html",
+            "lastmod": post_date,
+            "changefreq": "monthly",
+            "priority": "0.8"
+        })
+        
+    xml_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    ]
+    for url_info in sitemap_urls:
+        xml_lines.append('  <url>')
+        xml_lines.append(f'    <loc>{html.escape(url_info["loc"])}</loc>')
+        xml_lines.append(f'    <lastmod>{html.escape(url_info["lastmod"])}</lastmod>')
+        xml_lines.append(f'    <changefreq>{html.escape(url_info["changefreq"])}</changefreq>')
+        xml_lines.append(f'    <priority>{html.escape(url_info["priority"])}</priority>')
+        xml_lines.append('  </url>')
+    xml_lines.append('</urlset>')
+    
+    with open(sitemap_path, 'w', encoding='utf-8') as f:
+        f.write("\n".join(xml_lines) + "\n")
+    print("  Generated sitemap.xml")
+    
+    robots_content = f"""User-agent: *
+Allow: /
+
+Sitemap: {site_url}sitemap.xml
+"""
+    with open(robots_path, 'w', encoding='utf-8') as f:
+        f.write(robots_content)
+    print("  Generated robots.txt")
+
     print(f"Site built successfully! Output root: {docs_dir}")
 
 if __name__ == "__main__":

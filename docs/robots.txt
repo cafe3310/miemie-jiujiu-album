@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cafe3310.github.io/chocho-miemie-album/sitemap.xml
