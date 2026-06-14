@@ -1,0 +1,6 @@
+- **需求与设计**：为首页文章列表添加缩略图，大屏下缩略图展示在右侧。支持在文章 Frontmatter 中配置 `thumbnail` 进行自定义，默认回退至文章首张图片。
+- **修改详情**：
+  - **构建脚本**（[src/build.py](file:///Users/sipan/workspace/_working/jiujiu-miemie-gallery/src/build.py#L320-L352)）：解析 `thumbnail` 字段，并在未配置时自动回退提取 assets 中的第一张图片路径，拼装入文章列表项 HTML 结构。
+  - **页面样式**（[src/styles.css](file:///Users/sipan/workspace/_working/jiujiu-miemie-gallery/src/styles.css#L84-L141)）：为 `.post-item a` 新增右侧图文排版（大屏使用 `flex-direction: row-reverse`），且在小屏下响应式切换为垂直布局。
+  - **测试数据**（[source/2026-06-09-19-53_jiujiu-at-2019.md](file:///Users/sipan/workspace/_working/jiujiu-miemie-gallery/source/2026-06-09-19-53_jiujiu-at-2019.md#L4-L6)）：添加 `thumbnail` 自定义属性。
+- **验证结论**：重新构建后，两篇文章的缩略图自定义及默认首图在 PC 和移动端展示均符合预期。

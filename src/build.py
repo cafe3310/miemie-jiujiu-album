@@ -320,11 +320,33 @@ def build_site():
     # 1. 生成 index.html (NOTES 列表页)
     post_list_html = []
     for post in posts:
+        # 获取展示在首页的缩略图
+        thumb_url = post.get("thumbnail")
+        if thumb_url:
+            if thumb_url.startswith("./"):
+                thumb_url = thumb_url[2:]
+        else:
+            # 默认使用第一张图片
+            assets = post.get("assets", [])
+            if assets and post.get("assetsType") == "image":
+                first_url = assets[0].get("url", "")
+                if first_url.startswith("./"):
+                    thumb_url = first_url[2:]
+                else:
+                    thumb_url = first_url
+            else:
+                thumb_url = "gallery/2026-06-08-00-00_miemie-at-2018_miemie-7.jpg"
+
         post_list_html.append(f"""
         <article class="post-item">
-          <a href="posts/{post.get('id')}.html" style="text-decoration: none; color: inherit; display: block;">
-            <h2 class="post-title">{post.get('title')}</h2>
-            <p class="post-desc">{post.get('description')}</p>
+          <a href="posts/{post.get('id')}.html">
+            <div class="post-thumbnail">
+              <img src="{thumb_url}" alt="{html.escape(post.get('title', ''))}" loading="lazy">
+            </div>
+            <div class="post-info">
+              <h2 class="post-title">{post.get('title')}</h2>
+              <p class="post-desc">{post.get('description')}</p>
+            </div>
           </a>
         </article>
         """)
